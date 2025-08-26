@@ -1,0 +1,55 @@
+# Tool configuration for AGI Agent
+# This file defines external tools that can be loaded by the agent
+
+tools:
+  # Example external tool configuration
+  # - name: "custom_calculator"
+  #   module: "custom_tools.calculator"
+  #   class: "AdvancedCalculator"
+  #   init_params:
+  #     precision: 10
+  #   description: "Advanced calculator with high precision"
+  #   category: "computation"
+  #   safety_level: "low"
+
+  # Web scraping tool example
+  # - name: "web_scraper"
+  #   module: "custom_tools.web"
+  #   class: "WebScraper"
+  #   init_params:
+  #     timeout: 30
+  #     max_pages: 10
+  #   description: "Web scraping tool for data extraction"
+  #   category: "information"
+  #   safety_level: "medium"
+
+  # Database tool example
+  # - name: "database_query"
+  #   module: "custom_tools.database"
+  #   class: "DatabaseTool"
+  #   init_params:
+  #     connection_string: "sqlite:///data.db"
+  #   description: "Database query and manipulation tool"
+  #   category: "data"
+  #   safety_level: "high"
+
+# Built-in tools are automatically loaded:
+# - web_search: Search the web for information
+# - file_read: Read content from files
+# - file_write: Write content to files
+# - python_exec: Execute Python code (requires sandboxing)
+# - calculator: Perform mathematical calculations
+
+# Tool categories:
+# - information: Tools for gathering information
+# - computation: Tools for calculations and processing
+# - file_system: Tools for file operations
+# - communication: Tools for external communication
+# - data: Tools for data manipulation
+# - creative: Tools for creative tasks
+
+# Safety levels:
+# - low: Generally safe operations
+# - medium: Operations that may require oversight
+# - high: Operations that require approval
+# - critical: Operations that are heavily restricted
