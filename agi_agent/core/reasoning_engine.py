@@ -14,6 +14,7 @@ import anthropic
 
 from ..models.reasoning import ReasoningStep, ReasoningChain, ThoughtProcess
 from ..models.task import Task
+from .custom_model import CustomModelProvider
 
 
 class ReasoningType(Enum):
@@ -58,8 +59,8 @@ class ReasoningEngine:
         elif self.model_provider == "anthropic":
             self.client = anthropic.AsyncAnthropic()
         elif self.model_provider == "custom":
-            # Custom model provider - using demo mode
-            self.client = None
+            # Initialize custom model provider
+            self.client = CustomModelProvider(model_name=self.model_name)
             self.logger.info(f"Using custom model provider: {self.model_name}")
         else:
             raise ValueError(f"Unsupported model provider: {self.model_provider}")
@@ -269,7 +270,7 @@ class ReasoningEngine:
                     temperature=0.7
                 )
                 return response.choices[0].message.content
-            
+
             elif self.model_provider == "anthropic":
                 response = await self.client.messages.create(
                     model=self.model_name,
@@ -277,7 +278,12 @@ class ReasoningEngine:
                     messages=[{"role": "user", "content": prompt}]
                 )
                 return response.content[0].text
-            
+
+            elif self.model_provider == "custom":
+                # Use custom model provider
+                response = await self.client.generate_response(prompt, temperature=0.7)
+                return response
+
         except Exception as e:
             self.logger.error(f"Error querying model: {e}")
             return f"Error: Unable to process request - {str(e)}"

@@ -19,8 +19,8 @@ async def main():
     
     # Configure the agent
     config = AgentConfig(
-        model_provider="openai",  # or "anthropic"
-        model_name="gpt-4",
+        model_provider="custom",  # Using custom local model instead of OpenAI
+        model_name="auto",  # Auto-select best model for your system
         max_reasoning_depth=10,
         safety_level="high",
         learning_enabled=True,
@@ -114,10 +114,16 @@ async def main():
 
 
 if __name__ == "__main__":
-    # Check for required environment variables
-    if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
-        print("⚠️  Warning: No API keys found in environment variables.")
-        print("Please set OPENAI_API_KEY or ANTHROPIC_API_KEY to use the agent.")
-        print("\nFor testing purposes, the agent will still initialize but may not work properly.")
-    
+    # Check for required environment variables (only for external APIs)
+    config_provider = "custom"  # Change this to "openai" or "anthropic" if needed
+
+    if config_provider in ["openai", "anthropic"]:
+        if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
+            print("⚠️  Warning: No API keys found in environment variables.")
+            print("Please set OPENAI_API_KEY or ANTHROPIC_API_KEY to use external models.")
+            print("\nSwitching to custom local model...")
+    else:
+        print("🤖 Using custom local AI model - no API keys required!")
+        print("📦 Model will be downloaded from Hugging Face on first run.")
+
     asyncio.run(main())

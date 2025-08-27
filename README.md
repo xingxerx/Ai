@@ -55,6 +55,39 @@ cp .env.example .env
 python example.py
 ```
 
+## Custom AI Model (No API Keys Required!)
+
+This AGI Agent now includes a **custom local AI model** that runs entirely on your machine without requiring OpenAI or Anthropic API keys!
+
+### Quick Start with Custom Model
+
+1. **Setup (one-time)**:
+```bash
+python setup_custom_model.py
+```
+
+2. **Test the model**:
+```bash
+python test_custom_model.py
+```
+
+3. **Run the agent**:
+```bash
+python example.py
+```
+
+### Custom Model Features
+
+- 🚀 **No API keys required** - runs completely offline
+- 🧠 **Smart model selection** - automatically chooses the best model for your system
+- 💻 **Multi-platform support** - works on CPU, CUDA GPU, and Apple Silicon
+- 📦 **Multiple model options** - from lightweight to high-performance
+- 🔧 **Easy configuration** - just set `model_provider="custom"`
+
+### Available Models
+
+Run `python model_config.py` to see all available models and get recommendations for your system.
+
 ### Basic Usage
 
 ```python
@@ -125,8 +158,8 @@ The agent can be configured through the `AgentConfig` class:
 
 ```python
 config = AgentConfig(
-    model_provider="openai",      # "openai" or "anthropic"
-    model_name="gpt-4",           # Model to use
+    model_provider="custom",      # "openai", "anthropic", or "custom"
+    model_name="auto",            # Model to use (or "auto" for smart selection)
     max_reasoning_depth=10,       # Maximum reasoning steps
     safety_level="high",          # "low", "medium", "high"
     learning_enabled=True,        # Enable learning system
