@@ -4,7 +4,12 @@ Defines available models and their settings.
 """
 
 from typing import Dict, Any, List
-import torch
+
+# Optional torch import for device detection; fall back gracefully if unavailable
+try:
+    import torch  # type: ignore
+except Exception:
+    torch = None  # type: ignore
 
 
 class ModelConfig:
@@ -103,18 +108,32 @@ class ModelConfig:
     @classmethod
     def get_device_recommendation(cls) -> str:
         """Get recommended device based on available hardware."""
-        if torch.cuda.is_available():
-            gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-            if gpu_memory > 8:
-                return "cuda"  # High-end GPU
-            elif gpu_memory > 4:
-                return "cuda"  # Mid-range GPU
-            else:
-                return "cpu"   # Low VRAM GPU, use CPU instead
-        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-            return "mps"  # Apple Silicon
-        else:
+        # If torch is not available, default to CPU
+        if torch is None:
             return "cpu"
+
+        try:
+            if hasattr(torch, "cuda") and callable(getattr(torch.cuda, "is_available", None)) and torch.cuda.is_available():
+                try:
+                    gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
+                    # Prefer CUDA if reasonably capable; low VRAM falls back to CPU for safety
+                    if gpu_memory > 4:
+                        return "cuda"
+                    else:
+                        return "cpu"
+                except Exception:
+                    # If we can't read properties but CUDA is available, prefer CUDA
+                    return "cuda"
+
+            # Check for Apple Silicon MPS
+            backends = getattr(torch, "backends", None)
+            mps = getattr(backends, "mps", None) if backends else None
+            if mps and callable(getattr(mps, "is_available", None)) and mps.is_available():
+                return "mps"
+        except Exception:
+            pass
+
+        return "cpu"
     
     @classmethod
     def get_model_for_device(cls, device: str) -> str:
@@ -124,17 +143,19 @@ class ModelConfig:
         elif device == "mps":
             return "microsoft/DialoGPT-medium"  # Good balance for Apple Silicon
         elif device == "cuda":
-            # Check GPU memory
+            # Check GPU memory when torch is present; otherwise, pick a safe default
             try:
-                gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-                if gpu_memory > 8:
-                    return "gpt2-medium"  # Can handle larger models
-                elif gpu_memory > 4:
-                    return "microsoft/DialoGPT-large"
-                else:
-                    return "microsoft/DialoGPT-medium"
-            except:
-                return "microsoft/DialoGPT-medium"
+                if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
+                    gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
+                    if gpu_memory > 8:
+                        return "gpt2-medium"  # Can handle larger models
+                    elif gpu_memory > 4:
+                        return "microsoft/DialoGPT-large"
+                    else:
+                        return "microsoft/DialoGPT-medium"
+            except Exception:
+                pass
+            return "microsoft/DialoGPT-medium"
         else:
             return "microsoft/DialoGPT-medium"
     

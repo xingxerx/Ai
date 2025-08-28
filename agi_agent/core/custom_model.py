@@ -109,17 +109,24 @@ class CustomModelProvider:
             self.logger.info("Model loaded successfully")
 
         except ImportError as e:
-            # Clear, actionable message when deps are missing
-            self.logger.error("Missing dependencies for custom model: %s", e)
-            raise ImportError(
-                "CustomModelProvider requires 'torch' and 'transformers'. Install them with:\n"
-                "  pip install torch transformers accelerate sentencepiece\n"
-                "Or run the lightweight demo: python demo_custom_model.py"
-            ) from e
+            # Graceful fallback: no heavy deps, use simple local generator
+            self.logger.warning(
+                "Missing dependencies for custom model (%s). Falling back to simple local generator.",
+                e,
+            )
+            self.tokenizer = None
+            self.model = None
+            self.pipeline = self._simple_pipeline()
         except Exception as e:
             self.logger.error(f"Failed to load model: {e}")
-            # Fallback to a smaller model (requires transformers)
-            self._initialize_fallback_model()
+            # Fallback to a smaller model (requires transformers); if that fails, use simple
+            try:
+                self._initialize_fallback_model()
+            except Exception:
+                self.logger.warning("Fallback model load failed. Using simple local generator.")
+                self.tokenizer = None
+                self.model = None
+                self.pipeline = self._simple_pipeline()
 
     def _initialize_fallback_model(self):
         """Initialize a smaller fallback model if the main model fails."""
@@ -146,11 +153,16 @@ class CustomModelProvider:
             self.logger.info("Fallback model loaded successfully")
 
         except ImportError as e:
-            self.logger.error("Missing 'transformers' for fallback model: %s", e)
-            raise
+            self.logger.warning("'transformers' not available for fallback (%s). Using simple local generator.", e)
+            self.tokenizer = None
+            self.model = None
+            self.pipeline = self._simple_pipeline()
         except Exception as e:
-            self.logger.error(f"Failed to load fallback model: {e}")
-            raise RuntimeError("Could not initialize any model")
+            self.logger.warning(f"Failed to load fallback model: {e}. Using simple local generator.")
+            self.tokenizer = None
+            self.model = None
+            self.pipeline = self._simple_pipeline()
+
     
     async def generate_response(self, prompt: str, **kwargs) -> str:
         """
@@ -164,12 +176,9 @@ class CustomModelProvider:
             Generated response text
         """
         try:
-            if self.pipeline is None or self.tokenizer is None:
-                return (
-                    "Custom model not available. Please install required dependencies:\n"
-                    "  pip install torch transformers accelerate sentencepiece\n"
-                    "Or run the lightweight demo: python demo_custom_model.py"
-                )
+            # Ensure we have some pipeline to use
+            if self.pipeline is None:
+                self.pipeline = self._simple_pipeline()
 
             # Prepare generation parameters
             generation_kwargs = {
@@ -177,10 +186,12 @@ class CustomModelProvider:
                 "temperature": kwargs.get("temperature", self.temperature),
                 "top_p": kwargs.get("top_p", self.top_p),
                 "do_sample": kwargs.get("do_sample", self.do_sample),
-                "pad_token_id": self.tokenizer.eos_token_id,
                 "num_return_sequences": 1,
                 "return_full_text": False
             }
+            # Only include pad_token_id if tokenizer is available
+            if getattr(self, "tokenizer", None) is not None and hasattr(self.tokenizer, "eos_token_id"):
+                generation_kwargs["pad_token_id"] = self.tokenizer.eos_token_id
 
             # Run generation in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
@@ -200,7 +211,7 @@ class CustomModelProvider:
     def _generate_sync(self, prompt: str, generation_kwargs: Dict[str, Any]) -> str:
         """Synchronous generation method."""
         try:
-            # Generate response
+            # Generate response via installed pipeline or simple fallback
             outputs = self.pipeline(
                 prompt,
                 **generation_kwargs
@@ -236,7 +247,7 @@ class CustomModelProvider:
         response = ' '.join(response.split())
         
         return response if response else "I understand your request, but I need more context to provide a helpful response."
-    
+
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the loaded model."""
         return {
@@ -246,9 +257,10 @@ class CustomModelProvider:
             "temperature": self.temperature,
             "top_p": self.top_p,
             "model_loaded": self.model is not None,
-            "tokenizer_loaded": self.tokenizer is not None
+            "tokenizer_loaded": self.tokenizer is not None,
+            "mode": "full" if self.model is not None else ("fallback" if self.pipeline and self.tokenizer else "simple")
         }
-    
+
     def set_generation_params(self, **kwargs):
         """Update generation parameters."""
         if "max_length" in kwargs:
@@ -259,3 +271,21 @@ class CustomModelProvider:
             self.top_p = kwargs["top_p"]
         if "do_sample" in kwargs:
             self.do_sample = kwargs["do_sample"]
+
+    def _simple_pipeline(self):
+        """Return a very lightweight, dependency-free text generation callable."""
+        def _call(prompt: str, **kwargs):
+            # A naive, dependency-free response that echoes intent
+            max_len = int(kwargs.get("max_length", 256))
+            # Strip and compress whitespace
+            clean = " ".join(str(prompt).strip().split())
+            summary = (clean[: max_len - 120] + "…") if len(clean) > max_len - 120 else clean
+            response = (
+                "[Local Simple Generator]\n"
+                "This environment lacks torch/transformers; returning a concise reply.\n\n"
+                f"You asked: {summary}\n\n"
+                "Reply: I understand your request and can outline a high-level approach. "
+                "To enable richer, model-generated responses, install torch and transformers."
+            )
+            return [{"generated_text": response}]
+        return _call
