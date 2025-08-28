@@ -9,8 +9,16 @@ import logging
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
-import openai
-import anthropic
+# Optional third-party providers; only required if selected via model_provider
+try:
+    import openai  # type: ignore
+except ImportError:
+    openai = None  # type: ignore
+
+try:
+    import anthropic  # type: ignore
+except ImportError:
+    anthropic = None  # type: ignore
 
 from ..models.reasoning import ReasoningStep, ReasoningChain, ThoughtProcess
 from ..models.task import Task
@@ -29,10 +37,10 @@ class ReasoningType(Enum):
 class ReasoningContext:
     """Context for reasoning operations."""
     task: Optional[Task] = None
-    previous_steps: List[ReasoningStep] = None
-    available_tools: List[str] = None
-    constraints: List[str] = None
-    knowledge_base: Dict[str, Any] = None
+    previous_steps: Optional[List[ReasoningStep]] = None
+    available_tools: Optional[List[str]] = None
+    constraints: Optional[List[str]] = None
+    knowledge_base: Optional[Dict[str, Any]] = None
 
 
 class ReasoningEngine:
@@ -55,11 +63,15 @@ class ReasoningEngine:
     def _initialize_model(self):
         """Initialize the AI model client."""
         if self.model_provider == "openai":
+            if openai is None:
+                raise ImportError("openai package is not installed. Install it or set model_provider='custom'.")
             self.client = openai.AsyncOpenAI()
         elif self.model_provider == "anthropic":
+            if anthropic is None:
+                raise ImportError("anthropic package is not installed. Install it or set model_provider='custom'.")
             self.client = anthropic.AsyncAnthropic()
         elif self.model_provider == "custom":
-            # Initialize custom model provider
+            # Initialize custom model provider (no external dependencies required)
             self.client = CustomModelProvider(model_name=self.model_name)
             self.logger.info(f"Using custom model provider: {self.model_name}")
         else:

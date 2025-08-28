@@ -4,12 +4,16 @@ Example usage of the AGI Agent.
 
 import asyncio
 import os
-from dotenv import load_dotenv
+
+# Make python-dotenv optional
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # If python-dotenv isn't installed, just continue without loading .env
+    pass
 
 from agi_agent import AGIAgent, AgentConfig
-
-# Load environment variables
-load_dotenv()
 
 
 async def main():
