@@ -35,7 +35,7 @@ The AGI Agent is built with a modular architecture consisting of:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/agi-agent.git
+git clone https://github.com/xingxerx/Ai.git
 cd agi-agent
 ```
 

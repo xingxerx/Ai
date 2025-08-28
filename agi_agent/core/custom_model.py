@@ -5,14 +5,7 @@ Provides local AI model capabilities using Hugging Face transformers.
 
 import asyncio
 import logging
-import torch
 from typing import Dict, List, Any, Optional, Union
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    pipeline,
-    GenerationConfig
-)
 import json
 import re
 import sys
@@ -75,19 +68,23 @@ class CustomModelProvider:
     def _initialize_model(self):
         """Initialize the tokenizer and model."""
         try:
+            # Import heavy dependencies lazily so module import doesn't fail
+            import torch  # type: ignore
+            from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # type: ignore
+
             self.logger.info(f"Loading model: {self.model_name} on {self.device}")
-            
+
             # Load tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_name,
                 trust_remote_code=True,
                 padding_side="left"
             )
-            
+
             # Add pad token if it doesn't exist
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
-            
+
             # Load model
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
@@ -96,10 +93,10 @@ class CustomModelProvider:
                 device_map="auto" if self.device == "cuda" else None,
                 low_cpu_mem_usage=True
             )
-            
+
             if self.device != "cuda":
                 self.model = self.model.to(self.device)
-            
+
             # Create text generation pipeline
             self.pipeline = pipeline(
                 "text-generation",
@@ -108,35 +105,49 @@ class CustomModelProvider:
                 device=0 if self.device == "cuda" else -1,
                 torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
             )
-            
+
             self.logger.info("Model loaded successfully")
-            
+
+        except ImportError as e:
+            # Clear, actionable message when deps are missing
+            self.logger.error("Missing dependencies for custom model: %s", e)
+            raise ImportError(
+                "CustomModelProvider requires 'torch' and 'transformers'. Install them with:\n"
+                "  pip install torch transformers accelerate sentencepiece\n"
+                "Or run the lightweight demo: python demo_custom_model.py"
+            ) from e
         except Exception as e:
             self.logger.error(f"Failed to load model: {e}")
-            # Fallback to a smaller model
+            # Fallback to a smaller model (requires transformers)
             self._initialize_fallback_model()
-    
+
     def _initialize_fallback_model(self):
         """Initialize a smaller fallback model if the main model fails."""
         try:
+            # transformers is required even for fallback
+            from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # type: ignore
+
             fallback_model = "distilgpt2"
             self.logger.info(f"Loading fallback model: {fallback_model}")
-            
+
             self.tokenizer = AutoTokenizer.from_pretrained(fallback_model)
             self.tokenizer.pad_token = self.tokenizer.eos_token
-            
+
             self.model = AutoModelForCausalLM.from_pretrained(fallback_model)
             self.model = self.model.to(self.device)
-            
+
             self.pipeline = pipeline(
                 "text-generation",
                 model=self.model,
                 tokenizer=self.tokenizer,
                 device=0 if self.device == "cuda" else -1
             )
-            
+
             self.logger.info("Fallback model loaded successfully")
-            
+
+        except ImportError as e:
+            self.logger.error("Missing 'transformers' for fallback model: %s", e)
+            raise
         except Exception as e:
             self.logger.error(f"Failed to load fallback model: {e}")
             raise RuntimeError("Could not initialize any model")
@@ -144,15 +155,22 @@ class CustomModelProvider:
     async def generate_response(self, prompt: str, **kwargs) -> str:
         """
         Generate a response to the given prompt.
-        
+
         Args:
             prompt: Input prompt
             **kwargs: Additional generation parameters
-            
+
         Returns:
             Generated response text
         """
         try:
+            if self.pipeline is None or self.tokenizer is None:
+                return (
+                    "Custom model not available. Please install required dependencies:\n"
+                    "  pip install torch transformers accelerate sentencepiece\n"
+                    "Or run the lightweight demo: python demo_custom_model.py"
+                )
+
             # Prepare generation parameters
             generation_kwargs = {
                 "max_length": kwargs.get("max_length", self.max_length),
@@ -163,18 +181,18 @@ class CustomModelProvider:
                 "num_return_sequences": 1,
                 "return_full_text": False
             }
-            
+
             # Run generation in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(
-                None, 
-                self._generate_sync, 
-                prompt, 
+                None,
+                self._generate_sync,
+                prompt,
                 generation_kwargs
             )
-            
+
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Error generating response: {e}")
             return f"Error: Unable to generate response - {str(e)}"
