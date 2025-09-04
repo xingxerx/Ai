@@ -4,11 +4,19 @@ Manages discovery, registration, and execution of external tools.
 """
 
 import json
-import yaml
+# Optional dependency: PyYAML for config loading
+try:
+    import yaml  # type: ignore
+except Exception:
+    yaml = None  # type: ignore
 import logging
 import importlib
 # The user may need to install this dependency: pip install pyautogui
-import pyautogui
+# Optional dependency: pyautogui for sending hotkeys
+try:
+    import pyautogui  # type: ignore
+except Exception:
+    pyautogui = None  # type: ignore
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
@@ -92,15 +100,24 @@ class ToolIntegrationFramework:
     
     def _load_tools_from_config(self):
         """Load external tools from configuration file."""
+        # If PyYAML is not available, skip external config gracefully
+        if yaml is None:
+            self.logger.info(
+                "PyYAML not installed; skipping external tools config at %s",
+                self.config_path,
+            )
+            return
         try:
-            with open(self.config_path, 'r') as f:
-                config = yaml.safe_load(f)
-            
-            for tool_config in config.get('tools', []):
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f) or {}
+
+            for tool_config in config.get('tools', []) or []:
                 self._load_external_tool(tool_config)
-                
+
         except FileNotFoundError:
-            self.logger.info(f"Tool config file {self.config_path} not found, using built-in tools only")
+            self.logger.info(
+                "Tool config file %s not found, using built-in tools only", self.config_path
+            )
         except Exception as e:
             self.logger.error(f"Error loading tool config: {e}")
     
@@ -352,6 +369,11 @@ class KillProgramTool(BaseTool):
 
     async def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         try:
+            if pyautogui is None:
+                return {
+                    "success": False,
+                    "error": "pyautogui is not installed. Install with: pip install pyautogui"
+                }
             pyautogui.hotkey('alt', 'f4')
             return {
                 "success": True,

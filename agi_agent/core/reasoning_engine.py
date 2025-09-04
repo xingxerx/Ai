@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
+<<<<<<< HEAD
 # Optional dependencies: provide lightweight stubs if not installed so imports and tests don't break
 try:
     import openai  # type: ignore
@@ -27,9 +28,22 @@ except Exception:
             def __init__(self, *args, **kwargs):
                 pass
     anthropic = _AnthropicStub()  # type: ignore
+=======
+# Optional third-party providers; only required if selected via model_provider
+try:
+    import openai  # type: ignore
+except ImportError:
+    openai = None  # type: ignore
+
+try:
+    import anthropic  # type: ignore
+except ImportError:
+    anthropic = None  # type: ignore
+>>>>>>> 5bc4d76c7d7e0fb8305d844d51ee0bbd29ce34f8
 
 from ..models.reasoning import ReasoningStep, ReasoningChain, ThoughtProcess
 from ..models.task import Task
+from .custom_model import CustomModelProvider
 
 
 class ReasoningType(Enum):
@@ -44,10 +58,10 @@ class ReasoningType(Enum):
 class ReasoningContext:
     """Context for reasoning operations."""
     task: Optional[Task] = None
-    previous_steps: List[ReasoningStep] = None
-    available_tools: List[str] = None
-    constraints: List[str] = None
-    knowledge_base: Dict[str, Any] = None
+    previous_steps: Optional[List[ReasoningStep]] = None
+    available_tools: Optional[List[str]] = None
+    constraints: Optional[List[str]] = None
+    knowledge_base: Optional[Dict[str, Any]] = None
 
 
 class ReasoningEngine:
@@ -70,12 +84,16 @@ class ReasoningEngine:
     def _initialize_model(self):
         """Initialize the AI model client."""
         if self.model_provider == "openai":
+            if openai is None:
+                raise ImportError("openai package is not installed. Install it or set model_provider='custom'.")
             self.client = openai.AsyncOpenAI()
         elif self.model_provider == "anthropic":
+            if anthropic is None:
+                raise ImportError("anthropic package is not installed. Install it or set model_provider='custom'.")
             self.client = anthropic.AsyncAnthropic()
         elif self.model_provider == "custom":
-            # Custom model provider - using demo mode
-            self.client = None
+            # Initialize custom model provider (no external dependencies required)
+            self.client = CustomModelProvider(model_name=self.model_name)
             self.logger.info(f"Using custom model provider: {self.model_name}")
         else:
             raise ValueError(f"Unsupported model provider: {self.model_provider}")
@@ -285,7 +303,7 @@ class ReasoningEngine:
                     temperature=0.7
                 )
                 return response.choices[0].message.content
-            
+
             elif self.model_provider == "anthropic":
                 response = await self.client.messages.create(
                     model=self.model_name,
@@ -293,7 +311,12 @@ class ReasoningEngine:
                     messages=[{"role": "user", "content": prompt}]
                 )
                 return response.content[0].text
-            
+
+            elif self.model_provider == "custom":
+                # Use custom model provider
+                response = await self.client.generate_response(prompt, temperature=0.7)
+                return response
+
         except Exception as e:
             self.logger.error(f"Error querying model: {e}")
             return f"Error: Unable to process request - {str(e)}"

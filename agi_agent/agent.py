@@ -41,7 +41,7 @@ class AgentConfig:
     tools_config_path: str = "./tools.yaml"
 
 
-class XingAgent:
+class AGIAgent:
     """
     Main Xing Agent class that coordinates all subsystems to complete tasks.
     """
