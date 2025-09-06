@@ -9,6 +9,26 @@ import logging
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
+<<<<<<< HEAD
+# Optional dependencies: provide lightweight stubs if not installed so imports and tests don't break
+try:
+    import openai  # type: ignore
+except Exception:  # ImportError or other issues
+    class _OpenAIStub:
+        class AsyncOpenAI:  # simple placeholder for patching in tests
+            def __init__(self, *args, **kwargs):
+                pass
+    openai = _OpenAIStub()  # type: ignore
+
+try:
+    import anthropic  # type: ignore
+except Exception:
+    class _AnthropicStub:
+        class AsyncAnthropic:
+            def __init__(self, *args, **kwargs):
+                pass
+    anthropic = _AnthropicStub()  # type: ignore
+=======
 # Optional third-party providers; only required if selected via model_provider
 try:
     import openai  # type: ignore
@@ -19,6 +39,7 @@ try:
     import anthropic  # type: ignore
 except ImportError:
     anthropic = None  # type: ignore
+>>>>>>> 5bc4d76c7d7e0fb8305d844d51ee0bbd29ce34f8
 
 from ..models.reasoning import ReasoningStep, ReasoningChain, ThoughtProcess
 from ..models.task import Task
