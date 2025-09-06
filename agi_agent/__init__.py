@@ -13,7 +13,7 @@ from .core.tool_integration import ToolIntegrationFramework
 from .core.learning_system import LearningSystem
 from .core.safety_controller import SafetyController
 from .interfaces.communication import CommunicationInterface
-from .agent import AGIAgent
+from .agent import AGIAgent, AgentConfig
 
 __all__ = [
     "ReasoningEngine",
@@ -23,5 +23,6 @@ __all__ = [
     "LearningSystem",
     "SafetyController",
     "CommunicationInterface",
-    "AGIAgent"
+    "AGIAgent",
+    "AgentConfig"
 ]
