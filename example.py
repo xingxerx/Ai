@@ -5,7 +5,6 @@ Example usage of the AGI Agent.
 import asyncio
 import os
 
-<<<<<<< HEAD
 # Make dotenv optional to avoid ModuleNotFoundError if not installed
 try:
     from dotenv import load_dotenv
@@ -13,7 +12,6 @@ try:
 except Exception:
     def load_dotenv():
         return False
-=======
 import sys
 import glob
 import runpy
@@ -35,7 +33,6 @@ def run_all_scripts_in_directory():
             continue  # Skip this entrypoint itself
         print(f"Running {file}...")
         runpy.run_path(file, run_name="__main__")
->>>>>>> 5bc4d76c7d7e0fb8305d844d51ee0bbd29ce34f8
 
 from agi_agent import AGIAgent, AgentConfig
 
