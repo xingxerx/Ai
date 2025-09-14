@@ -5,18 +5,11 @@ Example usage of the AGI Agent.
 import asyncio
 import os
 
-# Make dotenv optional to avoid ModuleNotFoundError if not installed
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except Exception:
-    def load_dotenv():
-        return False
 import sys
 import glob
 import runpy
 
-# Make python-dotenv optional
+# Make python-dotenv optional to avoid ModuleNotFoundError if not installed
 try:
     from dotenv import load_dotenv
     load_dotenv()
