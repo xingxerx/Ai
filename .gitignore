@@ -1,0 +1,32 @@
+# Build artifacts
+target/
+node_modules/
+*.pdb
+*.exe
+*.dll
+*.lib
+*.exp
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rust specific
+Cargo.lock
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+test.txt
