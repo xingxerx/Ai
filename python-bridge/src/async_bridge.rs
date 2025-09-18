@@ -1,7 +1,5 @@
 // Async bridge implementation
 use pyo3::prelude::*;
-use pyo3_asyncio::tokio::future_into_py;
-use tokio;
 
 pub struct AsyncBridge;
 
@@ -10,10 +8,10 @@ impl AsyncBridge {
         Self
     }
     
-    pub fn run_async_task(_py: Python, _task: &str) -> PyResult<&PyAny> {
-        // TODO: Implement async bridge
-        todo!("Implement in T031")
-    }
+    // TODO: Implement async bridge in T031
+    // pub fn run_async_task(_py: Python, _task: &str) -> PyResult<&PyAny> {
+    //     todo!("Implement in T031")
+    // }
 }
 
 impl Default for AsyncBridge {
