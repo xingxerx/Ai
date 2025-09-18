@@ -30,3 +30,7 @@ Cargo.lock
 # Temporary files
 *.tmp
 test.txt
+
+# Added by cargo
+
+/target
