@@ -1,0 +1,22 @@
+[package]
+name = "ai-agent-cli"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance AI agent CLI"
+authors = ["xingxerx"]
+
+[[bin]]
+name = "ai-agent-cli"
+path = "src/main.rs"
+
+[dependencies]
+# Use workspace dependencies
+clap = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Local workspace dependencies
+ai-agent-core = { path = "../core" }
+ai-agent-python-bridge = { path = "../python-bridge" }

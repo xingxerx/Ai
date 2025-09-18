@@ -1,11 +1,13 @@
-[package]
-name = "ai-agent-cli"
-version = "0.1.0"
-edition = "2021"
-description = "High-performance AI agent CLI written in Rust"
-authors = ["xingxerx"]
+[workspace]
+members = [
+    "cli",
+    "core",
+    "python-bridge",
+]
+resolver = "2"
 
-[dependencies]
+[workspace.dependencies]
+# Shared dependencies across workspace members
 clap = { version = "4.0", features = ["derive"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -13,5 +15,7 @@ serde_json = "1.0"
 anyhow = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 pyo3 = { version = "0.19", features = ["auto-initialize"] }
+pyo3-asyncio = { version = "0.19", features = ["tokio-runtime"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
+criterion = "0.5"

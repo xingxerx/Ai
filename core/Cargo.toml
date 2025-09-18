@@ -1,0 +1,21 @@
+[package]
+name = "ai-agent-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core functionality for AI agent (file processing, tools, system)"
+authors = ["xingxerx"]
+
+[lib]
+name = "ai_agent_core"
+path = "src/lib.rs"
+
+[dependencies]
+# Use workspace dependencies
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
