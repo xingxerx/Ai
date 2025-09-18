@@ -1,7 +1,6 @@
 // Data exchange utilities
 use pyo3::prelude::*;
 use serde::{Serialize, Deserialize};
-use anyhow::Result;
 
 #[derive(Serialize, Deserialize)]
 #[pyclass]
@@ -18,11 +17,12 @@ impl DataExchange {
     
     pub fn serialize(&self) -> PyResult<String> {
         // TODO: Implement data serialization
-        todo!("Implement in T030")
+        Ok(self.data.clone())
     }
     
-    pub fn deserialize(_data: &str) -> PyResult<Self> {
+    #[staticmethod]
+    pub fn deserialize(data: String) -> PyResult<Self> {
         // TODO: Implement data deserialization
-        todo!("Implement in T030")
+        Ok(Self::new(data))
     }
 }
