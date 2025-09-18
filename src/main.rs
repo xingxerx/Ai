@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use anyhow::Result;
-use tracing::{info, error};
+use tracing::info;
 
 /// High-performance AI Agent CLI
 #[derive(Parser)]
