@@ -1,6 +1,5 @@
 // Agent core bridge implementation
 use pyo3::prelude::*;
-use anyhow::Result;
 
 #[pyclass]
 pub struct AgentCore;

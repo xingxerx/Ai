@@ -1,5 +1,4 @@
 // Async bridge implementation
-use pyo3::prelude::*;
 
 pub struct AsyncBridge;
 
