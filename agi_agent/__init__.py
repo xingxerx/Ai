@@ -13,7 +13,11 @@ from .core.tool_integration import ToolIntegrationFramework
 from .core.learning_system import LearningSystem
 from .core.safety_controller import SafetyController
 from .interfaces.communication import CommunicationInterface
+<<<<<<< HEAD
+from .agent import AGIAgent, AgentConfig
+=======
 from .agent import XingAgent as AGIAgent, AgentConfig
+>>>>>>> 292dbc9281e467c642f4e5acecc3190f26716a75
 
 __all__ = [
     "ReasoningEngine",
@@ -24,5 +28,9 @@ __all__ = [
     "SafetyController",
     "CommunicationInterface",
     "AGIAgent",
+<<<<<<< HEAD
+    "AgentConfig"
+=======
     "AgentConfig",
+>>>>>>> 292dbc9281e467c642f4e5acecc3190f26716a75
 ]

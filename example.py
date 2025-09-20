@@ -5,20 +5,11 @@ Example usage of the AGI Agent.
 import asyncio
 import os
 
-<<<<<<< HEAD
-# Make dotenv optional to avoid ModuleNotFoundError if not installed
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except Exception:
-    def load_dotenv():
-        return False
-=======
 import sys
 import glob
 import runpy
 
-# Make python-dotenv optional
+# Make python-dotenv optional to avoid ModuleNotFoundError if not installed
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -35,7 +26,6 @@ def run_all_scripts_in_directory():
             continue  # Skip this entrypoint itself
         print(f"Running {file}...")
         runpy.run_path(file, run_name="__main__")
->>>>>>> 5bc4d76c7d7e0fb8305d844d51ee0bbd29ce34f8
 
 from agi_agent import AGIAgent, AgentConfig
 
@@ -147,10 +137,16 @@ if __name__ == "__main__":
 
     if config_provider in ["openai", "anthropic"]:
         if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
-            print("⚠️  Warning: No API keys found in environment variables.")
-            print("Please set OPENAI_API_KEY or ANTHROPIC_API_KEY to use external models.")
-            print("\nSwitching to custom local model...")
+            print("⚠️  Warning: No API keys found for OpenAI/Anthropic.")
+            print("   Please set OPENAI_API_KEY or ANTHROPIC_API_KEY in your .env file to use external models.")
+            print("   Falling back to the custom local model.")
     else:
+        try:
+            import torch
+        except ImportError:
+            print("\n⚠️  Warning: 'torch' is not installed. The custom model requires it.")
+            print("   To enable the full capabilities of the local model, please run:")
+            print("   pip install torch transformers accelerate\n")
         print("🤖 Using custom local AI model - no API keys required!")
         print("📦 Model will be downloaded from Hugging Face on first run.")
 
